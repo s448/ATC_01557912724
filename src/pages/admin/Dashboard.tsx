@@ -6,6 +6,9 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useEvents } from '@/contexts/EventContext';
 import { useBookings } from '@/contexts/BookingContext';
 import { formatDate } from '@/lib/utils';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { BarChart, Bar, PieChart, Pie, Cell, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, LineChart, Line, CartesianGrid } from 'recharts';
+import { ChartBar, ChartPie, ChartLine } from 'lucide-react';
 
 const AdminDashboard = () => {
   const { events, deleteEvent } = useEvents();
@@ -17,6 +20,63 @@ const AdminDashboard = () => {
       deleteEvent(id);
     }
   };
+
+  // Calculate revenue by event
+  const revenueData = events.map(event => {
+    const eventBookings = bookings.filter(b => b.eventId === event.id).length;
+    const revenue = event.price * eventBookings;
+    return {
+      name: event.name,
+      value: revenue,
+      count: eventBookings
+    };
+  }).sort((a, b) => b.value - a.value);
+
+  // Calculate bookings by event category
+  const categoryData = events.reduce((acc, event) => {
+    const eventBookings = bookings.filter(b => b.eventId === event.id).length;
+    
+    const existingCategory = acc.find(c => c.name === event.category);
+    if (existingCategory) {
+      existingCategory.value += eventBookings;
+      existingCategory.count += 1;
+    } else {
+      acc.push({
+        name: event.category,
+        value: eventBookings,
+        count: 1
+      });
+    }
+    
+    return acc;
+  }, [] as { name: string; value: number; count: number }[]);
+
+  // Booking trends (past 6 months)
+  const today = new Date();
+  const sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(today.getMonth() - 6);
+  
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  
+  const bookingTrends = Array.from({ length: 6 }, (_, i) => {
+    const month = new Date();
+    month.setMonth(today.getMonth() - i);
+    
+    const monthStr = monthNames[month.getMonth()];
+    const monthBookings = bookings.filter(booking => {
+      const bookingDate = new Date(booking.bookingDate);
+      return bookingDate.getMonth() === month.getMonth() && 
+             bookingDate.getFullYear() === month.getFullYear();
+    }).length;
+    
+    return {
+      name: monthStr,
+      bookings: monthBookings
+    };
+  }).reverse();
+
+  // Colors for charts
+  const COLORS = ['#8B5CF6', '#D946EF', '#F97316', '#0EA5E9', '#10B981', '#F59E0B'];
 
   return (
     <div className="container mx-auto max-w-7xl">
@@ -53,6 +113,120 @@ const AdminDashboard = () => {
             </CardTitle>
             <CardDescription>Total Revenue</CardDescription>
           </CardHeader>
+        </Card>
+      </div>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* Booking Trends Chart */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center">
+              <ChartLine className="mr-2 h-5 w-5 text-muted-foreground" />
+              <CardTitle>Booking Trends</CardTitle>
+            </div>
+            <CardDescription>Monthly booking activity for the past 6 months</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[300px]">
+              <ChartContainer
+                config={{
+                  line: { theme: { light: '#8B5CF6', dark: '#9b87f5' } },
+                  grid: { theme: { light: '#E5DEFF', dark: '#1A1F2C' } }
+                }}
+              >
+                <LineChart data={bookingTrends} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-grid)" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip content={<ChartTooltipContent />} />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="bookings"
+                    name="Bookings"
+                    stroke="var(--color-line)"
+                    strokeWidth={2}
+                    dot={{ strokeWidth: 2, r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                </LineChart>
+              </ChartContainer>
+            </div>
+          </CardContent>
+        </Card>
+        
+        {/* Revenue by Event Chart */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center">
+              <ChartBar className="mr-2 h-5 w-5 text-muted-foreground" />
+              <CardTitle>Revenue by Event</CardTitle>
+            </div>
+            <CardDescription>Top 5 revenue-generating events</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[300px]">
+              <ChartContainer
+                config={{
+                  bar: { theme: { light: '#8B5CF6', dark: '#9b87f5' } }
+                }}
+              >
+                <BarChart data={revenueData.slice(0, 5)} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                  <XAxis dataKey="name" tickFormatter={(value) => value.length > 10 ? `${value.substring(0, 10)}...` : value} />
+                  <YAxis />
+                  <Tooltip content={<ChartTooltipContent />} />
+                  <Legend />
+                  <Bar dataKey="value" name="Revenue ($)" fill="var(--color-bar)" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ChartContainer>
+            </div>
+          </CardContent>
+        </Card>
+        
+        {/* Bookings by Category Chart */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <div className="flex items-center">
+              <ChartPie className="mr-2 h-5 w-5 text-muted-foreground" />
+              <CardTitle>Bookings by Category</CardTitle>
+            </div>
+            <CardDescription>Distribution of bookings across event categories</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[350px] flex items-center justify-center">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={categoryData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    outerRadius={130}
+                    fill="#8884d8"
+                    dataKey="value"
+                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                  >
+                    {categoryData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <ChartTooltip content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      const data = payload[0].payload;
+                      return (
+                        <div className="custom-tooltip bg-background border border-border p-3 rounded-md shadow-md">
+                          <p className="font-medium">{data.name}</p>
+                          <p className="text-sm text-muted-foreground">{`Events: ${data.count}`}</p>
+                          <p className="text-sm">{`Bookings: ${data.value}`}</p>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
         </Card>
       </div>
       

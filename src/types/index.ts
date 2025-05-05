@@ -25,3 +25,14 @@ export interface Booking {
   userId: string;
   bookingDate: string;
 }
+
+export interface ChartDataPoint {
+  name: string;
+  value: number;
+  count?: number;
+}
+
+export interface BookingTrend {
+  name: string;
+  bookings: number;
+}
