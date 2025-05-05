@@ -12,12 +12,11 @@ import { formatDate } from '@/lib/utils';
 const EventDetails = () => {
   const { id } = useParams<{ id: string }>();
   const { getEvent } = useEvents();
-  const { hasUserBookedEvent, createBooking } = useBookings();
+  const { hasUserBookedEvent } = useBookings();
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [event, setEvent] = useState(getEvent(id || ''));
   const [isBooked, setIsBooked] = useState(false);
-  const [isBookingComplete, setIsBookingComplete] = useState(false);
 
   useEffect(() => {
     if (!event) {
@@ -34,50 +33,19 @@ const EventDetails = () => {
     }
 
     if (event) {
-      createBooking(event.id);
-      setIsBooked(true);
-      setIsBookingComplete(true);
+      // Instead of directly booking, navigate to payment with event data
+      navigate('/payment', { 
+        state: { 
+          eventId: event.id, 
+          eventName: event.name, 
+          eventPrice: event.price 
+        }
+      });
     }
   };
 
   if (!event) {
     return null;
-  }
-
-  if (isBookingComplete) {
-    return (
-      <div className="min-h-[80vh] flex items-center justify-center">
-        <Card className="w-full max-w-md text-center">
-          <CardHeader>
-            <CardTitle className="text-2xl text-green-600 dark:text-green-400">Congratulations!</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="mb-6">
-              <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-medium mb-2">Your booking is confirmed!</h3>
-              <p className="text-gray-600 dark:text-gray-300 mb-4">
-                You have successfully booked a ticket for {event.name}.
-              </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                A confirmation has been saved to your account.
-              </p>
-            </div>
-          </CardContent>
-          <CardFooter className="flex justify-center space-x-4">
-            <Button onClick={() => navigate('/')}>
-              Browse More Events
-            </Button>
-            <Button variant="outline" onClick={() => navigate('/my-bookings')}>
-              View My Bookings
-            </Button>
-          </CardFooter>
-        </Card>
-      </div>
-    );
   }
 
   return (
@@ -129,7 +97,7 @@ const EventDetails = () => {
                   className="w-full"
                   onClick={handleBookEvent}
                 >
-                  Book Now
+                  Proceed to Payment
                 </Button>
               )}
             </CardContent>
