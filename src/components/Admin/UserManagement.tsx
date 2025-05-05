@@ -6,21 +6,33 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { User } from '@/types';
+import { toast } from 'sonner';
 
 const UserManagement = () => {
-  const { users } = useAuth();
+  // Mock users data since AuthContext doesn't have users property
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
+  const [users, setUsers] = useState<User[]>([
+    { id: '1', username: 'admin', email: 'admin@example.com', role: 'admin' },
+    { id: '2', username: 'john_doe', email: 'john@example.com', role: 'user' },
+    { id: '3', username: 'jane_smith', email: 'jane@example.com', role: 'user' },
+    { id: '4', username: 'user', email: 'user@example.com', role: 'user' },
+  ]);
 
   // Filter users based on search term
-  const filteredUsers = users ? users.filter(user => 
+  const filteredUsers = users.filter(user => 
     user.username.toLowerCase().includes(searchTerm.toLowerCase()) || 
     user.email.toLowerCase().includes(searchTerm.toLowerCase())
-  ) : [];
+  );
 
-  // Update user role function (simulation)
+  // Update user role function
   const handleRoleUpdate = (userId: string, newRole: 'admin' | 'user') => {
-    console.log(`Update user ${userId} to role: ${newRole}`);
-    // In a real implementation, this would call an API to update the role
+    setUsers(prevUsers => 
+      prevUsers.map(user => 
+        user.id === userId ? { ...user, role: newRole } : user
+      )
+    );
+    toast.success(`User role updated to ${newRole}`);
   };
 
   return (

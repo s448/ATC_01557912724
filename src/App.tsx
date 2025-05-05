@@ -28,57 +28,55 @@ import EditEvent from "./pages/admin/EditEvent";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <AuthProvider>
-          <EventProvider>
-            <BookingProvider>
-              <BrowserRouter>
-                <Routes>
-                  <Route path="/" element={<MainLayout><Home /></MainLayout>} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/register" element={<Register />} />
-                  <Route path="/forgot-password" element={<ForgotPassword />} />
-                  <Route path="/reset-password" element={<ResetPassword />} />
-                  <Route path="/events/:id" element={<MainLayout><EventDetails /></MainLayout>} />
-                  <Route path="/payment" element={<MainLayout><Payment /></MainLayout>} />
-                  
-                  <Route path="/my-bookings" element={
-                    <ProtectedRoute>
-                      <MainLayout><MyBookings /></MainLayout>
-                    </ProtectedRoute>
-                  } />
-                  
-                  <Route path="/admin" element={
-                    <ProtectedRoute requireAdmin>
-                      <MainLayout><AdminDashboard /></MainLayout>
-                    </ProtectedRoute>
-                  } />
-                  
-                  <Route path="/admin/events/new" element={
-                    <ProtectedRoute requireAdmin>
-                      <MainLayout><CreateEvent /></MainLayout>
-                    </ProtectedRoute>
-                  } />
-                  
-                  <Route path="/admin/events/edit/:id" element={
-                    <ProtectedRoute requireAdmin>
-                      <MainLayout><EditEvent /></MainLayout>
-                    </ProtectedRoute>
-                  } />
-                  
-                  <Route path="*" element={<MainLayout><NotFound /></MainLayout>} />
-                </Routes>
-                <Toaster position="top-right" />
-              </BrowserRouter>
-            </BookingProvider>
-          </EventProvider>
-        </AuthProvider>
-      </TooltipProvider>
-    </QueryClientProvider>
-  </React.StrictMode>
+const App: React.FC = () => (
+  <QueryClientProvider client={queryClient}>
+    <AuthProvider>
+      <EventProvider>
+        <BookingProvider>
+          <TooltipProvider>
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<MainLayout><Home /></MainLayout>} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/events/:id" element={<MainLayout><EventDetails /></MainLayout>} />
+                <Route path="/payment" element={<MainLayout><Payment /></MainLayout>} />
+                
+                <Route path="/my-bookings" element={
+                  <ProtectedRoute>
+                    <MainLayout><MyBookings /></MainLayout>
+                  </ProtectedRoute>
+                } />
+                
+                <Route path="/admin" element={
+                  <ProtectedRoute requireAdmin>
+                    <MainLayout><AdminDashboard /></MainLayout>
+                  </ProtectedRoute>
+                } />
+                
+                <Route path="/admin/events/new" element={
+                  <ProtectedRoute requireAdmin>
+                    <MainLayout><CreateEvent /></MainLayout>
+                  </ProtectedRoute>
+                } />
+                
+                <Route path="/admin/events/edit/:id" element={
+                  <ProtectedRoute requireAdmin>
+                    <MainLayout><EditEvent /></MainLayout>
+                  </ProtectedRoute>
+                } />
+                
+                <Route path="*" element={<MainLayout><NotFound /></MainLayout>} />
+              </Routes>
+              <Toaster position="top-right" />
+            </BrowserRouter>
+          </TooltipProvider>
+        </BookingProvider>
+      </EventProvider>
+    </AuthProvider>
+  </QueryClientProvider>
 );
 
 export default App;
