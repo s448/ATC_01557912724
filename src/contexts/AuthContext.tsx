@@ -10,6 +10,8 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (username: string, email: string, password: string) => Promise<void>;
   logout: () => void;
+  requestPasswordReset: (email: string) => Promise<void>;
+  resetPassword: (token: string, newPassword: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -85,6 +87,67 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     toast.success('Logged out successfully');
   };
 
+  // Password reset request function
+  const requestPasswordReset = async (email: string) => {
+    // Find if the user exists
+    const userExists = mockUsers.some(user => user.email === email);
+    
+    if (userExists) {
+      // Generate a reset token (in a real app, this would be a secure random token)
+      const token = Math.random().toString(36).substring(2, 15);
+      
+      // Find the user and set the reset token
+      const userIndex = mockUsers.findIndex(user => user.email === email);
+      if (userIndex !== -1) {
+        mockUsers[userIndex].resetToken = token;
+        
+        // In a real app, you would send an email with a link to the reset page
+        console.log(`Reset token for ${email}: ${token}`);
+        console.log(`Reset link: ${window.location.origin}/reset-password?token=${token}`);
+        
+        // For demo purposes, we'll store the token in localStorage
+        localStorage.setItem('passwordResetToken', JSON.stringify({ email, token }));
+      }
+    }
+    
+    // Always return success to prevent email enumeration attacks
+    // In a real app, you would send an actual email here
+    return Promise.resolve();
+  };
+
+  // Reset password function
+  const resetPassword = async (token: string, newPassword: string) => {
+    // In a real app, you would verify the token on the server
+    const storedReset = localStorage.getItem('passwordResetToken');
+    
+    if (!storedReset) {
+      throw new Error('Invalid or expired reset token');
+    }
+    
+    const { email, token: storedToken } = JSON.parse(storedReset);
+    
+    if (token !== storedToken) {
+      throw new Error('Invalid or expired reset token');
+    }
+    
+    // Find the user and update their password
+    const userIndex = mockUsers.findIndex(user => user.email === email);
+    
+    if (userIndex === -1) {
+      throw new Error('User not found');
+    }
+    
+    // In a real app, you would hash the password
+    // For demo purposes, we're just clearing the reset token
+    mockUsers[userIndex].resetToken = undefined;
+    
+    // Clear the stored token
+    localStorage.removeItem('passwordResetToken');
+    
+    toast.success('Password reset successful');
+    return Promise.resolve();
+  };
+
   const isAuthenticated = !!user;
   const isAdmin = user?.role === 'admin';
 
@@ -96,7 +159,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isAdmin,
         login,
         register,
-        logout
+        logout,
+        requestPasswordReset,
+        resetPassword
       }}
     >
       {children}
