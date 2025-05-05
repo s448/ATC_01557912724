@@ -1,4 +1,3 @@
-
 export interface User {
   id: string;
   username: string;
@@ -35,4 +34,18 @@ export interface ChartDataPoint {
 export interface BookingTrend {
   name: string;
   bookings: number;
+}
+
+export interface Payment {
+  id: string;
+  userId: string;
+  amount: number;
+  status: 'completed' | 'failed' | 'pending';
+  date: string;
+}
+
+export interface Category {
+  id: string;
+  name: string;
+  eventsCount: number;
 }

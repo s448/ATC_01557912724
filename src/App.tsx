@@ -19,6 +19,7 @@ import ResetPassword from "./pages/ResetPassword";
 import EventDetails from "./pages/EventDetails";
 import MyBookings from "./pages/MyBookings";
 import NotFound from "./pages/NotFound";
+import Payment from "./pages/Payment";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -42,6 +43,7 @@ const App = () => (
                   <Route path="/forgot-password" element={<ForgotPassword />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/events/:id" element={<MainLayout><EventDetails /></MainLayout>} />
+                  <Route path="/payment" element={<MainLayout><Payment /></MainLayout>} />
                   
                   <Route path="/my-bookings" element={
                     <ProtectedRoute>
