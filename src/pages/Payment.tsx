@@ -64,19 +64,12 @@ const Payment = () => {
 
       // Simulate creating a payment session
       setTimeout(() => {
-        toast({
-          title: "Payment Successful",
-          description: `You have successfully made a payment of $${amount.toFixed(2)}`,
-        });
+        toast.success(`Payment of $${amount.toFixed(2)} successful!`);
         setLoading(false);
         navigate('/my-bookings');
       }, 1500);
     } catch (error) {
-      toast({
-        title: "Payment Failed",
-        description: "There was an error processing your payment. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("There was an error processing your payment. Please try again.");
       setLoading(false);
     }
   };
