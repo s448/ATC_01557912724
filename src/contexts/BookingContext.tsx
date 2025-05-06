@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { Booking } from '@/types';
 import { useAuth } from './AuthContext';
@@ -37,7 +38,8 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
       }
       
       if (data) {
-        setBookings(data as Booking[]);
+        // Type cast the data to Booking[]
+        setBookings(data as unknown as Booking[]);
       }
     };
     
@@ -96,7 +98,8 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
       }
       
       if (data) {
-        setBookings(prev => [...prev, data[0] as Booking]);
+        // Properly type cast the data
+        setBookings(prev => [...prev, data[0] as unknown as Booking]);
         toast.success('Booking successful!');
       }
     } catch (error: any) {

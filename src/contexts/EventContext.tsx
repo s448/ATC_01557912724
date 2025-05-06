@@ -32,7 +32,8 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
       
       if (data) {
-        setEvents(data as Event[]);
+        // Properly type cast the data
+        setEvents(data as unknown as Event[]);
       }
     };
     
@@ -72,7 +73,8 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
       
       if (data) {
-        setEvents(prev => [...prev, data[0] as Event]);
+        // Properly type cast the data
+        setEvents(prev => [...prev, data[0] as unknown as Event]);
         toast.success('Event created successfully!');
       }
     } catch (error: any) {
@@ -82,9 +84,14 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const updateEvent = async (updatedEvent: Event) => {
     try {
+      // Convert Event to Record<string, unknown> to satisfy TypeScript
+      const eventRecord: Record<string, unknown> = {
+        ...updatedEvent
+      };
+      
       const { error } = await supabase
         .from('events')
-        .update(updatedEvent)
+        .update(eventRecord)
         .eq('id', updatedEvent.id);
       
       if (error) {

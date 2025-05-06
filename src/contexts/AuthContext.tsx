@@ -37,7 +37,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (data) {
           setUser({
             id,
-            username: data.username,
+            username: data.username as string,
             email: email || '',
             role: data.role as 'admin' | 'user'
           });
@@ -62,7 +62,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (data) {
           setUser({
             id,
-            username: data.username,
+            username: data.username as string,
             email: email || '',
             role: data.role as 'admin' | 'user'
           });
