@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { Booking } from '@/types';
 import { useAuth } from './AuthContext';
@@ -8,6 +7,7 @@ import { toast } from 'sonner';
 interface BookingContextType {
   bookings: Booking[];
   createBooking: (eventId: string) => void;
+  cancelBooking: (bookingId: string) => Promise<void>;
   getUserBookings: (userId: string) => Booking[];
   hasUserBookedEvent: (eventId: string) => boolean;
 }
@@ -104,6 +104,30 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
+  const cancelBooking = async (bookingId: string): Promise<void> => {
+    if (!user) {
+      toast.error('You must be logged in to cancel a booking');
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('bookings')
+        .delete()
+        .eq('id', bookingId)
+        .eq('userId', user.id); // Ensure the user can only cancel their own bookings
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      setBookings(prev => prev.filter(booking => booking.id !== bookingId));
+      toast.success('Booking cancelled successfully');
+    } catch (error: any) {
+      toast.error(`Failed to cancel booking: ${error.message}`);
+    }
+  };
+
   const getUserBookings = (userId: string) => {
     return bookings.filter(booking => booking.userId === userId);
   };
@@ -118,6 +142,7 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
       value={{
         bookings,
         createBooking,
+        cancelBooking,
         getUserBookings,
         hasUserBookedEvent
       }}
