@@ -5,14 +5,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { useBookings } from '@/contexts/BookingContext';
 import { useEvents } from '@/contexts/EventContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { formatDate } from '@/lib/utils';
 
 const MyBookings = () => {
   const { getUserBookings, cancelBooking } = useBookings();
   const { getEvent } = useEvents();
+  const { user } = useAuth();
   const navigate = useNavigate();
   
-  const userBookings = getUserBookings();
+  // Pass the user ID to getUserBookings
+  const userBookings = user ? getUserBookings(user.id) : [];
   
   const bookingsWithEventDetails = userBookings.map(booking => {
     const event = getEvent(booking.eventId);
