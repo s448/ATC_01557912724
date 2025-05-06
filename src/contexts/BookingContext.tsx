@@ -2,13 +2,13 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { Booking } from '@/types';
 import { useAuth } from './AuthContext';
-import { toast } from '@/components/ui/sonner';
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 
 interface BookingContextType {
   bookings: Booking[];
   createBooking: (eventId: string) => void;
-  cancelBooking: (bookingId: string) => void;
-  getUserBookings: () => Booking[];
+  getUserBookings: (userId: string) => Booking[];
   hasUserBookedEvent: (eventId: string) => boolean;
 }
 
@@ -17,44 +17,95 @@ const BookingContext = createContext<BookingContextType | undefined>(undefined);
 export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const { user } = useAuth();
-  
-  useEffect(() => {
-    // Load bookings from localStorage
-    const savedBookings = localStorage.getItem('eventHorizonBookings');
-    if (savedBookings) {
-      setBookings(JSON.parse(savedBookings));
-    }
-  }, []);
 
-  const createBooking = (eventId: string) => {
+  useEffect(() => {
+    // Load user's bookings when authenticated
+    const fetchBookings = async () => {
+      if (!user) {
+        setBookings([]);
+        return;
+      }
+      
+      const { data, error } = await supabase
+        .from('bookings')
+        .select('*')
+        .eq('userId', user.id);
+        
+      if (error) {
+        console.error('Error fetching bookings:', error);
+        return;
+      }
+      
+      if (data) {
+        setBookings(data as Booking[]);
+      }
+    };
+    
+    fetchBookings();
+    
+    // Subscribe to changes in the bookings table for the current user
+    let bookingsSubscription: any;
+    
+    if (user) {
+      bookingsSubscription = supabase
+        .channel('bookings-channel')
+        .on('postgres_changes', { 
+          event: '*', 
+          schema: 'public', 
+          table: 'bookings',
+          filter: `userId=eq.${user.id}`
+        }, () => {
+          fetchBookings();
+        })
+        .subscribe();
+    }
+      
+    return () => {
+      if (bookingsSubscription) {
+        bookingsSubscription.unsubscribe();
+      }
+    };
+  }, [user]);
+
+  const createBooking = async (eventId: string) => {
     if (!user) {
       toast.error('You must be logged in to book an event');
       return;
     }
+    
+    // Check if user has already booked this event
+    if (hasUserBookedEvent(eventId)) {
+      toast.error('You have already booked this event');
+      return;
+    }
 
-    const newBooking: Booking = {
-      id: Date.now().toString(),
+    const newBooking: Omit<Booking, 'id'> = {
       eventId,
       userId: user.id,
-      bookingDate: new Date().toISOString()
+      bookingDate: new Date().toISOString(),
     };
-    
-    const updatedBookings = [...bookings, newBooking];
-    setBookings(updatedBookings);
-    localStorage.setItem('eventHorizonBookings', JSON.stringify(updatedBookings));
-    toast.success('Event booked successfully!');
+
+    try {
+      const { data, error } = await supabase
+        .from('bookings')
+        .insert([newBooking])
+        .select();
+        
+      if (error) {
+        throw new Error(error.message);
+      }
+      
+      if (data) {
+        setBookings(prev => [...prev, data[0] as Booking]);
+        toast.success('Booking successful!');
+      }
+    } catch (error: any) {
+      toast.error(`Failed to create booking: ${error.message}`);
+    }
   };
 
-  const cancelBooking = (bookingId: string) => {
-    const updatedBookings = bookings.filter(booking => booking.id !== bookingId);
-    setBookings(updatedBookings);
-    localStorage.setItem('eventHorizonBookings', JSON.stringify(updatedBookings));
-    toast.success('Booking cancelled successfully!');
-  };
-
-  const getUserBookings = () => {
-    if (!user) return [];
-    return bookings.filter(booking => booking.userId === user.id);
+  const getUserBookings = (userId: string) => {
+    return bookings.filter(booking => booking.userId === userId);
   };
 
   const hasUserBookedEvent = (eventId: string) => {
@@ -67,7 +118,6 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
       value={{
         bookings,
         createBooking,
-        cancelBooking,
         getUserBookings,
         hasUserBookedEvent
       }}

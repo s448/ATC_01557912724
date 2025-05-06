@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { toast } from 'sonner';
 import { loadStripe } from '@stripe/stripe-js';
 import { useBookings } from '@/contexts/BookingContext';
+import { supabase } from '@/lib/supabase';
 
 // Initialize Stripe with the publishable key
 const stripePromise = loadStripe('pk_test_51RLTMmQ8kQHUoJdGIQRamtw9IeVnPyy9TEIJB03HfpxRGBPwDDVg3iSFo1FWLXyfj4PZR5F9eos1ERL79F7FXIvF0084SZi8Yu');
@@ -37,20 +38,28 @@ const Payment = () => {
     
     setLoading(true);
     try {
-      // In a real implementation, this would call your Stripe backend endpoint
-      const stripe = await stripePromise;
-      if (!stripe) throw new Error('Stripe failed to initialize');
-
-      // Simulate payment processing
-      setTimeout(() => {
-        // After successful payment, create the booking
-        createBooking(eventDetails.eventId);
-        setPaymentCompleted(true);
-        setLoading(false);
-        toast.success(`Payment for ${eventDetails.eventName} successful!`);
-      }, 1500);
-    } catch (error) {
-      toast.error("Payment failed. Please try again.");
+      // Create payment record in Supabase
+      const { data, error } = await supabase
+        .from('payments')
+        .insert([{
+          eventId: eventDetails.eventId,
+          amount: eventDetails.eventPrice,
+          status: 'completed',
+          date: new Date().toISOString()
+        }])
+        .select();
+        
+      if (error) {
+        throw new Error(error.message);
+      }
+      
+      // After successful payment, create the booking
+      createBooking(eventDetails.eventId);
+      setPaymentCompleted(true);
+      setLoading(false);
+      toast.success(`Payment for ${eventDetails.eventName} successful!`);
+    } catch (error: any) {
+      toast.error("Payment failed: " + error.message);
       setLoading(false);
     }
   };
@@ -58,18 +67,24 @@ const Payment = () => {
   const handlePackagePayment = async (amount: number) => {
     setLoading(true);
     try {
-      // In a real implementation, this would call your Stripe backend endpoint
-      const stripe = await stripePromise;
-      if (!stripe) throw new Error('Stripe failed to initialize');
+      // Create payment record in Supabase
+      const { error } = await supabase
+        .from('payments')
+        .insert([{
+          amount,
+          status: 'completed',
+          date: new Date().toISOString()
+        }]);
+        
+      if (error) {
+        throw new Error(error.message);
+      }
 
-      // Simulate creating a payment session
-      setTimeout(() => {
-        toast.success(`Payment of $${amount.toFixed(2)} successful!`);
-        setLoading(false);
-        navigate('/my-bookings');
-      }, 1500);
-    } catch (error) {
-      toast.error("There was an error processing your payment. Please try again.");
+      toast.success(`Payment of $${amount.toFixed(2)} successful!`);
+      setLoading(false);
+      navigate('/my-bookings');
+    } catch (error: any) {
+      toast.error("Payment failed: " + error.message);
       setLoading(false);
     }
   };
