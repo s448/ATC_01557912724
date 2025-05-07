@@ -28,20 +28,22 @@ export const useEventsData = () => {
     
     fetchEventsData();
     
-    // Try to subscribe to changes in the events table
+    // Setup real-time subscription if Supabase is available
     let eventsSubscription: { unsubscribe: () => void } | null = null;
     
     try {
-      eventsSubscription = supabase
-        .channel('events-channel')
-        .on('postgres_changes', { 
-          event: '*', 
-          schema: 'public', 
-          table: 'events' 
-        }, () => {
-          fetchEventsData();
-        })
-        .subscribe();
+      const channel = supabase.channel('events-channel');
+      if (channel && typeof channel.on === 'function') {
+        eventsSubscription = channel
+          .on('postgres_changes', { 
+            event: '*', 
+            schema: 'public', 
+            table: 'events' 
+          }, () => {
+            fetchEventsData();
+          })
+          .subscribe();
+      }
     } catch (error) {
       console.error('Error subscribing to events channel:', error);
     }

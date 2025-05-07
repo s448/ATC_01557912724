@@ -14,7 +14,8 @@ export const fetchEvents = async () => {
       return [];
     }
     
-    return (data || []) as Event[];
+    // Properly cast the data to Event[]
+    return (data as Event[] || []);
   } catch (error) {
     console.error('Error fetching events:', error);
     return [];
@@ -40,6 +41,7 @@ export const addEvent = async (event: Omit<Event, 'id'>, userId: string) => {
     }
     
     toast.success('Event created successfully!');
+    // Properly cast the data to Event
     return data[0] as Event;
   } catch (error: any) {
     toast.error(`Failed to create event: ${error.message}`);
