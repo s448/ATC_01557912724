@@ -13,7 +13,8 @@ export const login = async (email: string, password: string) => {
       throw new Error(error.message);
     }
     
-    toast.success('Login successful!');
+    // Don't set toast here, it will be handled by the component
+    return Promise.resolve();
   } catch (error: any) {
     throw new Error(error.message || 'Failed to login');
   }

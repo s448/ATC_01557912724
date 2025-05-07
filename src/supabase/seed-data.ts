@@ -1,5 +1,4 @@
 
-// This file is used to seed the database with initial data
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
@@ -14,106 +13,152 @@ export const seedDatabase = async () => {
       .limit(1);
     
     if (existingEvents && existingEvents.length > 0) {
-      console.log('Database already has data, skipping seed');
-      return;
+      console.log('Database already has events, skipping event seed');
+    } else {
+      console.log('Seeding database with initial event data...');
+      await seedEvents();
     }
     
-    console.log('Seeding database with initial data...');
+    // Always make sure demo users exist
+    await ensureDemoUsers();
     
-    // Create admin user if it doesn't exist
-    const adminEmail = 'admin@example.com';
-    const { data: existingAdmin } = await supabase
+    console.log('Database seeding complete!');
+    
+  } catch (error) {
+    console.error('Error seeding database:', error);
+    toast.error('Failed to load demo data');
+  }
+};
+
+const ensureDemoUsers = async () => {
+  try {
+    // Check for admin user
+    const { data: adminUser } = await supabase
       .from('users')
       .select('*')
-      .eq('email', adminEmail)
-      .single();
+      .eq('email', 'admin@example.com')
+      .maybeSingle();
     
-    let adminId;
-    
-    if (!existingAdmin) {
-      // Register the admin user
-      const { data: authUser, error: authError } = await supabase.auth.signUp({
-        email: adminEmail,
+    if (!adminUser) {
+      console.log('Creating admin demo user...');
+      // Create admin auth user
+      const { data: adminAuthUser, error: adminAuthError } = await supabase.auth.admin.createUser({
+        email: 'admin@example.com',
         password: 'password',
+        email_confirm: true
       });
       
-      if (authError) {
-        console.error('Error creating admin auth user:', authError);
-        return;
-      }
-      
-      adminId = authUser.user?.id;
-      
-      if (adminId) {
-        // Create the admin profile
-        const { error: profileError } = await supabase
+      if (adminAuthError || !adminAuthUser.user) {
+        // Fallback to regular signup if admin API fails
+        const { data: adminFallback, error: adminFallbackError } = await supabase.auth.signUp({
+          email: 'admin@example.com',
+          password: 'password'
+        });
+        
+        if (adminFallbackError) {
+          console.error('Error creating admin auth user:', adminFallbackError);
+          return;
+        }
+        
+        if (adminFallback.user) {
+          // Insert admin user record
+          await supabase
+            .from('users')
+            .insert({
+              id: adminFallback.user.id,
+              username: 'admin',
+              email: 'admin@example.com',
+              role: 'admin'
+            });
+        }
+      } else {
+        // Insert admin user record
+        await supabase
           .from('users')
           .insert({
-            id: adminId,
+            id: adminAuthUser.user.id,
             username: 'admin',
-            email: adminEmail,
+            email: 'admin@example.com',
             role: 'admin'
           });
-        
-        if (profileError) {
-          console.error('Error creating admin profile:', profileError);
-          return;
-        }
       }
-    } else {
-      adminId = existingAdmin.id;
     }
     
-    // Create regular user if it doesn't exist
-    const userEmail = 'user@example.com';
-    const { data: existingUser } = await supabase
+    // Check for regular user
+    const { data: regularUser } = await supabase
       .from('users')
       .select('*')
-      .eq('email', userEmail)
-      .single();
+      .eq('email', 'user@example.com')
+      .maybeSingle();
     
-    let userId;
-    
-    if (!existingUser) {
-      // Register the regular user
-      const { data: authUser, error: authError } = await supabase.auth.signUp({
-        email: userEmail,
+    if (!regularUser) {
+      console.log('Creating regular demo user...');
+      // Create regular auth user
+      const { data: userAuthUser, error: userAuthError } = await supabase.auth.admin.createUser({
+        email: 'user@example.com',
         password: 'password',
+        email_confirm: true
       });
       
-      if (authError) {
-        console.error('Error creating user auth:', authError);
-        return;
-      }
-      
-      userId = authUser.user?.id;
-      
-      if (userId) {
-        // Create the user profile
-        const { error: profileError } = await supabase
-          .from('users')
-          .insert({
-            id: userId,
-            username: 'user',
-            email: userEmail,
-            role: 'user'
-          });
+      if (userAuthError || !userAuthUser.user) {
+        // Fallback to regular signup if admin API fails
+        const { data: userFallback, error: userFallbackError } = await supabase.auth.signUp({
+          email: 'user@example.com',
+          password: 'password'
+        });
         
-        if (profileError) {
-          console.error('Error creating user profile:', profileError);
+        if (userFallbackError) {
+          console.error('Error creating regular auth user:', userFallbackError);
           return;
         }
+        
+        if (userFallback.user) {
+          // Insert regular user record
+          await supabase
+            .from('users')
+            .insert({
+              id: userFallback.user.id,
+              username: 'user',
+              email: 'user@example.com',
+              role: 'user'
+            });
+        }
+      } else {
+        // Insert regular user record
+        await supabase
+          .from('users')
+          .insert({
+            id: userAuthUser.user.id,
+            username: 'user',
+            email: 'user@example.com',
+            role: 'user'
+          });
       }
-    } else {
-      userId = existingUser.id;
     }
+    
+    console.log('Demo users are ready');
+  } catch (error) {
+    console.error('Error ensuring demo users exist:', error);
+  }
+};
+
+const seedEvents = async () => {
+  try {
+    // Get admin ID for event creation
+    const { data: adminData } = await supabase
+      .from('users')
+      .select('id')
+      .eq('role', 'admin')
+      .maybeSingle();
+    
+    const adminId = adminData?.id;
     
     if (!adminId) {
       console.error('Admin ID not found, cannot seed events');
       return;
     }
     
-    // Seed events - correct property names
+    // Seed events
     const eventData = [
       {
         name: 'Summer Music Festival',
@@ -145,20 +190,6 @@ export const seedDatabase = async () => {
         imageurl: 'https://images.unsplash.com/photo-1527224857830-43a7acc85260?ixlib=rb-4.0.3',
         createdby: adminId
       },
-    ];
-    
-    // Insert events - corrected property names match the db columns
-    const { error: eventsError } = await supabase
-      .from('events')
-      .insert(eventData);
-    
-    if (eventsError) {
-      console.error('Error seeding events:', eventsError);
-      return;
-    }
-    
-    // More event data - corrected property names
-    const moreEvents = [
       {
         name: 'Art Exhibition',
         description: 'Showcasing works from local and international artists.',
@@ -191,21 +222,16 @@ export const seedDatabase = async () => {
       }
     ];
     
-    // Insert more events - corrected property names
-    const { error: moreEventsError } = await supabase
+    // Insert events
+    const { error: eventsError } = await supabase
       .from('events')
-      .insert(moreEvents);
+      .insert(eventData);
     
-    if (moreEventsError) {
-      console.error('Error seeding more events:', moreEventsError);
-      return;
+    if (eventsError) {
+      console.error('Error seeding events:', eventsError);
     }
     
-    console.log('Database seeded successfully!');
-    toast.success('Demo data loaded successfully');
-    
   } catch (error) {
-    console.error('Error seeding database:', error);
-    toast.error('Failed to load demo data');
+    console.error('Error seeding events:', error);
   }
 };

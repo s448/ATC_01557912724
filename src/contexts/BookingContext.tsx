@@ -10,6 +10,8 @@ interface BookingContextType {
   createBooking: (eventId: string) => Promise<Booking | null>;
   cancelBooking: (id: string) => Promise<void>;
   isBookedByUser: (eventId: string) => boolean;
+  hasUserBookedEvent: (eventId: string) => boolean;
+  getUserBookings: () => Promise<Booking[]>;
 }
 
 const BookingContext = createContext<BookingContextType | undefined>(undefined);
@@ -119,6 +121,39 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return bookings.some(booking => booking.eventId === eventId);
   };
 
+  // Add the missing method that was causing the build error
+  const hasUserBookedEvent = (eventId: string) => {
+    return bookings.some(booking => booking.eventId === eventId);
+  };
+
+  // Add the missing method that was causing the build error
+  const getUserBookings = async (): Promise<Booking[]> => {
+    if (!user) return [];
+    
+    try {
+      const { data, error } = await supabase
+        .from('bookings')
+        .select('*, events(*)')
+        .eq('userid', user.id);
+      
+      if (error) {
+        throw new Error(error.message);
+      }
+      
+      if (!data) return [];
+      
+      return data.map(item => ({
+        id: item.id,
+        eventId: item.eventid,
+        userId: item.userid,
+        bookingDate: item.bookingdate,
+      }));
+    } catch (error: any) {
+      console.error('Error in getUserBookings:', error);
+      return [];
+    }
+  };
+
   return (
     <BookingContext.Provider
       value={{
@@ -126,6 +161,8 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
         createBooking,
         cancelBooking,
         isBookedByUser,
+        hasUserBookedEvent,
+        getUserBookings,
       }}
     >
       {children}

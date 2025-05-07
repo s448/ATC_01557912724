@@ -44,8 +44,9 @@ const App: React.FC = () => {
             <TooltipProvider>
               <BrowserRouter>
                 <Routes>
-                  <Route path="/landing" element={<LandingPage />} />
-                  <Route path="/" element={<MainLayout><Home /></MainLayout>} />
+                  {/* Changed routes as requested */}
+                  <Route path="/" element={<LandingPage />} />
+                  <Route path="/getstarted" element={<MainLayout><Home /></MainLayout>} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
                   <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -77,7 +78,8 @@ const App: React.FC = () => {
                     </ProtectedRoute>
                   } />
                   
-                  <Route path="/index" element={<Navigate to="/" replace />} />
+                  <Route path="/index" element={<Navigate to="/getstarted" replace />} />
+                  <Route path="/landing" element={<Navigate to="/" replace />} />
                   <Route path="*" element={<MainLayout><NotFound /></MainLayout>} />
                 </Routes>
                 <Toaster position="top-right" />

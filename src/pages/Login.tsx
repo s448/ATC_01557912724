@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
-import { toast } from '@/components/ui/sonner';
+import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 
 const Login = () => {
@@ -19,7 +19,7 @@ const Login = () => {
   useEffect(() => {
     // If already authenticated, redirect to home
     if (isAuthenticated) {
-      navigate('/');
+      navigate('/getstarted');
     }
   }, [isAuthenticated, navigate]);
 
@@ -29,11 +29,20 @@ const Login = () => {
 
     try {
       await login(email, password);
-      navigate('/');
+      // No need to navigate here, the useEffect will handle it
     } catch (error) {
       toast.error('Login failed: ' + (error as Error).message);
-    } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Only reset loading on error
+    }
+  };
+
+  const setDemoCredentials = (type: 'admin' | 'user') => {
+    if (type === 'admin') {
+      setEmail('admin@example.com');
+      setPassword('password');
+    } else {
+      setEmail('user@example.com');
+      setPassword('password');
     }
   };
 
@@ -96,10 +105,31 @@ const Login = () => {
                   Register
                 </Link>
               </p>
-              <div className="text-xs text-center text-gray-500">
-                <p>Demo credentials:</p>
-                <p>Admin: admin@example.com / password</p>
-                <p>User: user@example.com / password</p>
+              <div className="space-y-2 w-full">
+                <p className="text-xs text-center text-gray-500 font-medium">Quick Login with Demo Accounts</p>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-1/2"
+                    onClick={() => setDemoCredentials('admin')}
+                  >
+                    Admin Demo
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-1/2"
+                    onClick={() => setDemoCredentials('user')}
+                  >
+                    User Demo
+                  </Button>
+                </div>
+                <div className="text-xs text-center text-gray-500">
+                  <p>Demo password: password</p>
+                </div>
               </div>
             </CardFooter>
           </form>

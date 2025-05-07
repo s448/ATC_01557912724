@@ -13,7 +13,7 @@ const LandingPage = () => {
   // If user is already authenticated, redirect to home page
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/');
+      navigate('/getstarted');
     }
   }, [isAuthenticated, navigate]);
 
@@ -71,9 +71,9 @@ const LandingPage = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <Link to="/register">
+              <Link to="/getstarted">
                 <Button size="lg" variant="outline" className="px-8 py-6 text-lg rounded-lg border-2">
-                  Learn More
+                  Browse Events
                 </Button>
               </Link>
             </motion.div>
@@ -114,7 +114,11 @@ const LandingPage = () => {
             
             {/* Content */}
             <div className="relative">
-              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden transform rotate-2 hover:rotate-0 transition-transform duration-300">
+              <motion.div 
+                className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden transform rotate-2 hover:rotate-0 transition-transform duration-300"
+                whileHover={{ y: -10 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
                 <img 
                   src="https://images.unsplash.com/photo-1540575467063-178a50c2df87?ixlib=rb-4.0.3" 
                   alt="Tech event" 
@@ -124,9 +128,15 @@ const LandingPage = () => {
                   <h3 className="text-lg font-bold">Tech Conference 2023</h3>
                   <p className="text-sm text-gray-600 dark:text-gray-300">Learn about the latest advancements in technology</p>
                 </div>
-              </div>
+              </motion.div>
               
-              <div className="absolute top-24 -right-4 bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden w-48 transform -rotate-3 hover:rotate-0 transition-transform duration-300">
+              <motion.div 
+                className="absolute top-24 -right-4 bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden w-48 transform -rotate-3 hover:rotate-0 transition-transform duration-300"
+                initial={{ x: 20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.5, duration: 0.5 }}
+                whileHover={{ y: -5 }}
+              >
                 <img 
                   src="https://images.unsplash.com/photo-1506157786151-b8491531f063?ixlib=rb-4.0.3" 
                   alt="Music event" 
@@ -135,9 +145,15 @@ const LandingPage = () => {
                 <div className="p-3">
                   <h3 className="text-sm font-bold">Summer Music Festival</h3>
                 </div>
-              </div>
+              </motion.div>
               
-              <div className="absolute -bottom-4 -left-4 bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden w-48 transform rotate-6 hover:rotate-0 transition-transform duration-300">
+              <motion.div 
+                className="absolute -bottom-4 -left-4 bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden w-48 transform rotate-6 hover:rotate-0 transition-transform duration-300"
+                initial={{ x: -20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.7, duration: 0.5 }}
+                whileHover={{ y: -5 }}
+              >
                 <img 
                   src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?ixlib=rb-4.0.3" 
                   alt="Food event" 
@@ -146,7 +162,7 @@ const LandingPage = () => {
                 <div className="p-3">
                   <h3 className="text-sm font-bold">Food & Wine Festival</h3>
                 </div>
-              </div>
+              </motion.div>
             </div>
           </div>
         </motion.div>

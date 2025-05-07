@@ -27,16 +27,16 @@ const Navbar = () => {
 
   const handleLogout = () => {
     logout();
-    navigate('/landing');
+    navigate('/');
   };
 
   // Don't show navbar on landing page
-  if (location.pathname === '/landing') {
+  if (location.pathname === '/') {
     return null;
   }
 
   const navItems = [
-    { name: 'Home', path: '/' },
+    { name: 'Events', path: '/getstarted' },
     ...(isAuthenticated ? [{ name: 'My Bookings', path: '/my-bookings' }] : []),
     ...(isAdmin ? [{ name: 'Admin Dashboard', path: '/admin' }] : [])
   ];
@@ -46,7 +46,7 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex">
-            <Link to="/" className="flex-shrink-0 flex items-center">
+            <Link to="/getstarted" className="flex-shrink-0 flex items-center">
               <motion.span 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
