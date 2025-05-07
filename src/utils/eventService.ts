@@ -14,8 +14,21 @@ export const fetchEvents = async () => {
       return [];
     }
     
-    // Properly cast the data to Event[]
-    return (data as Event[] || []);
+    // Convert and validate the data as Event[]
+    if (!data) return [];
+    
+    // Ensure each item conforms to the Event interface
+    return data.map(item => ({
+      id: item.id as string,
+      name: item.name as string,
+      description: item.description as string,
+      category: item.category as string,
+      date: item.date as string,
+      venue: item.venue as string,
+      price: item.price as number,
+      imageUrl: item.imageurl as string,
+      createdBy: item.createdby as string
+    })) as Event[];
   } catch (error) {
     console.error('Error fetching events:', error);
     return [];
@@ -27,8 +40,14 @@ export const addEvent = async (event: Omit<Event, 'id'>, userId: string) => {
     const { data, error } = await supabase
       .from('events')
       .insert([{
-        ...event,
-        createdBy: userId
+        name: event.name,
+        description: event.description,
+        category: event.category,
+        date: event.date,
+        venue: event.venue,
+        price: event.price,
+        imageurl: event.imageUrl, // Note: column name in DB is lowercase
+        createdby: userId // Note: column name in DB is lowercase
       }])
       .select();
     
@@ -41,8 +60,19 @@ export const addEvent = async (event: Omit<Event, 'id'>, userId: string) => {
     }
     
     toast.success('Event created successfully!');
-    // Properly cast the data to Event
-    return data[0] as Event;
+    
+    // Convert the returned data to match the Event interface
+    return {
+      id: data[0].id as string,
+      name: data[0].name as string,
+      description: data[0].description as string,
+      category: data[0].category as string,
+      date: data[0].date as string,
+      venue: data[0].venue as string,
+      price: data[0].price as number,
+      imageUrl: data[0].imageurl as string,
+      createdBy: data[0].createdby as string
+    } as Event;
   } catch (error: any) {
     toast.error(`Failed to create event: ${error.message}`);
     throw error;
@@ -51,11 +81,23 @@ export const addEvent = async (event: Omit<Event, 'id'>, userId: string) => {
 
 export const updateEvent = async (updatedEvent: Event) => {
   try {
-    const { id, ...eventWithoutId } = updatedEvent;
+    const { id, ...eventData } = updatedEvent;
+    
+    // Convert to match DB column names
+    const dbEventData = {
+      name: eventData.name,
+      description: eventData.description,
+      category: eventData.category,
+      date: eventData.date,
+      venue: eventData.venue,
+      price: eventData.price,
+      imageurl: eventData.imageUrl,
+      createdby: eventData.createdBy
+    };
     
     const { error } = await supabase
       .from('events')
-      .update(eventWithoutId)
+      .update(dbEventData)
       .eq('id', id);
     
     if (error) {
