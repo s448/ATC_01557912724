@@ -4,16 +4,21 @@ import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
 export const fetchEvents = async () => {
-  const { data, error } = await supabase
-    .from('events')
-    .select('*');
-  
-  if (error) {
+  try {
+    const { data, error } = await supabase
+      .from('events')
+      .select('*');
+    
+    if (error) {
+      console.error('Error fetching events:', error);
+      return [];
+    }
+    
+    return (data || []) as Event[];
+  } catch (error) {
     console.error('Error fetching events:', error);
     return [];
   }
-  
-  return data as unknown as Event[];
 };
 
 export const addEvent = async (event: Omit<Event, 'id'>, userId: string) => {
@@ -30,8 +35,12 @@ export const addEvent = async (event: Omit<Event, 'id'>, userId: string) => {
       throw new Error(error.message);
     }
     
+    if (!data || data.length === 0) {
+      throw new Error('Failed to create event');
+    }
+    
     toast.success('Event created successfully!');
-    return data[0] as unknown as Event;
+    return data[0] as Event;
   } catch (error: any) {
     toast.error(`Failed to create event: ${error.message}`);
     throw error;
