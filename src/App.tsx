@@ -1,5 +1,6 @@
+
 import React, { useEffect } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -12,6 +13,7 @@ import { seedDatabase } from "./supabase/seed-data";
 
 // Pages
 import Home from "./pages/Home";
+import LandingPage from "./pages/LandingPage";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -42,6 +44,7 @@ const App: React.FC = () => {
             <TooltipProvider>
               <BrowserRouter>
                 <Routes>
+                  <Route path="/landing" element={<LandingPage />} />
                   <Route path="/" element={<MainLayout><Home /></MainLayout>} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
@@ -74,6 +77,7 @@ const App: React.FC = () => {
                     </ProtectedRoute>
                   } />
                   
+                  <Route path="/index" element={<Navigate to="/" replace />} />
                   <Route path="*" element={<MainLayout><NotFound /></MainLayout>} />
                 </Routes>
                 <Toaster position="top-right" />

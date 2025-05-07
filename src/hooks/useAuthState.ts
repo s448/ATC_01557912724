@@ -13,20 +13,29 @@ export const useAuthState = () => {
       if (session?.user) {
         const { id, email } = session.user;
         
-        // Get user profile from Supabase
-        const { data } = await supabase
-          .from('users')
-          .select('username, role')
-          .eq('id', id)
-          .single();
-        
-        if (data) {
-          setUser({
-            id,
-            username: data.username as string,
-            email: email || '',
-            role: data.role as 'admin' | 'user'
-          });
+        try {
+          // Get user profile from Supabase
+          const { data, error } = await supabase
+            .from('users')
+            .select('username, role')
+            .eq('id', id)
+            .single();
+          
+          if (error) {
+            console.error('Error fetching user profile:', error);
+            return;
+          }
+          
+          if (data) {
+            setUser({
+              id,
+              username: data.username as string,
+              email: email || '',
+              role: data.role as 'admin' | 'user'
+            });
+          }
+        } catch (error) {
+          console.error('Error in getUser:', error);
         }
       }
     };
@@ -38,20 +47,29 @@ export const useAuthState = () => {
       if (event === 'SIGNED_IN' && session?.user) {
         const { id, email } = session.user;
         
-        // Get user profile from Supabase
-        const { data } = await supabase
-          .from('users')
-          .select('username, role')
-          .eq('id', id)
-          .single();
-        
-        if (data) {
-          setUser({
-            id,
-            username: data.username as string,
-            email: email || '',
-            role: data.role as 'admin' | 'user'
-          });
+        try {
+          // Get user profile from Supabase
+          const { data, error } = await supabase
+            .from('users')
+            .select('username, role')
+            .eq('id', id)
+            .single();
+          
+          if (error) {
+            console.error('Error fetching user profile:', error);
+            return;
+          }
+          
+          if (data) {
+            setUser({
+              id,
+              username: data.username as string,
+              email: email || '',
+              role: data.role as 'admin' | 'user'
+            });
+          }
+        } catch (error) {
+          console.error('Error in onAuthStateChange:', error);
         }
       }
       

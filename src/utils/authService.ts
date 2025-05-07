@@ -43,7 +43,7 @@ export const register = async (username: string, email: string, password: string
           id: authUser.id,
           username,
           email,
-          role: 'user' // Default role
+          role: 'user' // Default role is 'user'
         }
       ]);
     
